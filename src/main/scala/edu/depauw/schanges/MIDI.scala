@@ -117,6 +117,9 @@ case class MIDIInstrument[P <: MIDIPitch](
 object MIDIInstrument:
   val Piano = MIDIInstrument[MIDIMelodic](0x79, 0, 0)
   val Harpsichord = MIDIInstrument[MIDIMelodic](0x79, 0, 6)
+  val TubularBells = MIDIInstrument[MIDIMelodic](0x79, 0, 14)
+  val ChurchBell = MIDIInstrument[MIDIMelodic](0x79, 1, 14)
+  val Carillon = MIDIInstrument[MIDIMelodic](0x79, 2, 14)
   val Drum = MIDIInstrument[MIDIRhythm](0x78, 0, 0)
 
 object Render:

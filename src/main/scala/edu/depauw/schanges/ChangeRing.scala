@@ -19,7 +19,9 @@ val Bells = "1234567890ETABCDFGHJKLMNPQRSUVWYZ"
 case class Row(positions: Int*):
   val stage: Stage = Stage(positions.size)
 
-  def apply(position: Int): Int = positions(position) // note: positions go from 0 to stage.size - 1
+  def apply(position: Int): Int = positions(
+    position
+  ) // note: positions go from 0 to stage.size - 1
 
   def permute[T](items: Seq[T]): Seq[T] = {
     val n = math.min(items.size, stage.size)
@@ -39,16 +41,15 @@ trait Change:
 
   def apply(row: Row): Row = {
     val n = row.stage.size
-    Row(Array.tabulate(n) {
-      i => row(math.min(this(i), n - 1))
+    Row(Array.tabulate(n) { i =>
+      row(math.min(this(i), n - 1))
     }*)
   }
 
 object Change:
-  /**
-    * Construct a Change where the given places are made.
-    * Note that place numbers start at 0. For example,
-    * Change(0, 3) is the transposition 02135476....
+  /** Construct a Change where the given places are made. Note that place
+    * numbers start at 0. For example, Change(0, 3) is the transposition
+    * 02135476....
     *
     * @param places
     * @return
@@ -60,13 +61,9 @@ object Change:
     for i <- 0 until last do
       val nextIndex = places.indexWhere(p => p >= i)
       val next = places(nextIndex)
-      if i == next then
-        transposition(i) = i
-      else
-        if (next - i) % 2 == 0 then
-          transposition(i) = i + 1
-        else
-          transposition(i) = math.max(i - 1, 0)
+      if i == next then transposition(i) = i
+      else if (next - i) % 2 == 0 then transposition(i) = i + 1
+      else transposition(i) = math.max(i - 1, 0)
     SeqChange(transposition*)
   }
 
@@ -92,11 +89,15 @@ case class SeqChange(positions: Int*) extends Change:
 case class Block(first: Row, rows: Row*):
   def last: Row = if rows.isEmpty then first else rows.last
 
-  def toEvent[P <: Pitch, V <: Volume](items: Seq[Event[P, V]], handGap: Event[P, V]): Event[P, V] = {
+  def toEvent[P <: Pitch, V <: Volume](
+      items: Seq[Event[P, V]],
+      handGap: Event[P, V]
+  ): Event[P, V] = {
     type T = Event[P, V]
     def playRow(row: Row): T = row.permute(items).foldLeft(EmptyEvent: T)(_ - _)
     rows.map(playRow).zipWithIndex.foldLeft(EmptyEvent: T) {
-      case (accum, (e, i)) => accum - e - (if i % 2 == 1 then handGap else EmptyEvent)
+      case (accum, (e, i)) =>
+        accum - e - (if i % 2 == 1 then handGap else EmptyEvent)
     }
   }
 
@@ -117,8 +118,7 @@ trait Composition:
 
   def course(row: Row): Block = {
     var result = apply(row)
-    while !result.isCourse do
-      result = apply(result)
+    while !result.isCourse do result = apply(result)
     result
   }
 
@@ -131,19 +131,20 @@ trait Composition:
   def *(times: Int): Composition = this.repeat(times)
 
 case class SeqComposition(parts: Composition*) extends Composition:
-  def apply(row: Row): Block = parts.foldLeft(Block(row)) {
-    case (b, c) => c(b)
+  def apply(row: Row): Block = parts.foldLeft(Block(row)) { case (b, c) =>
+    c(b)
   }
 
 // TODO ParComposition? Add covers?
 
 case class Method(changes: Change*) extends Composition:
   def apply(row: Row): Block = {
-    val rows = changes.foldLeft((row, Seq[Row]())) {
-      case ((r, rs), c) =>
+    val rows = changes
+      .foldLeft((row, Seq[Row]())) { case ((r, rs), c) =>
         val nr = c(r)
         (nr, rs :+ nr)
-    }._2
+      }
+      ._2
     Block(row, rows*)
   }
 
@@ -161,9 +162,10 @@ object Method:
       case (state, '.') =>
         State(state.changes :+ Change(state.places*), Seq())
       case (state, ',') =>
-        val front = if state.places.isEmpty
-            then state.changes
-            else state.changes :+ Change(state.places*)
+        val front =
+          if state.places.isEmpty
+          then state.changes
+          else state.changes :+ Change(state.places*)
         State(front ++ front.reverse.tail, Seq())
       case (state, c) if " \t\n\r".contains(c) =>
         state
@@ -191,7 +193,10 @@ object MajorDemos:
     val course = method(roundsRow)
 
     val event = blockToEvent(course)
-    val song = Song("Plain Hunt", Section(120, Piano(Rest.q - rounds | event | rounds)))
+    val song = Song(
+      "Plain Hunt",
+      Section(120, ChurchBell(Rest.q - rounds | event | rounds))
+    )
     Play(Render(song))
   }
 
@@ -206,7 +211,10 @@ object MajorDemos:
     println(course.size)
 
     val event = blockToEvent(course)
-    val song = Song("Plain Bob", Section(120, Piano(Rest.q - rounds | event | rounds)))
+    val song = Song(
+      "Plain Bob",
+      Section(120, ChurchBell(Rest.q - rounds | event | rounds))
+    )
     Play(Render(song))
   }
 
@@ -222,25 +230,28 @@ object MajorDemos:
     43265	s		3
     23645	2		–
     3 part.
-    */
+     */
     val plain = Method("x1x1x1x1,2")
     val bob = Method("x1x1x1x1,4")
     val single = Method("x1x1x1x1,234")
 
     val c1 = (plain * 6 + bob) * 2
     val c2 = single + plain * 4 + bob + bob
-        + plain * 6 + bob
+      + plain * 6 + bob
     val c3 = (bob + plain * 5 + bob + c1) * 2
     val c4 = single + plain * 5 + bob + c1
     val c5 = bob + plain * 6
-        + bob + plain * 5 + bob
+      + bob + plain * 5 + bob
 
     val course = (c1 + c2 + c3 + c4 + c5).course(roundsRow)
     println(course.isTrue)
     println(course.size)
 
     val event = blockToEvent(course)
-    val song = Song("5040 Plain Bob Major", Section(120, Piano(Rest.q - rounds | event | rounds)))
+    val song = Song(
+      "5040 Plain Bob Major",
+      Section(120, ChurchBell(Rest.q - rounds | event | rounds))
+    )
     Play(Render(song))
   }
 
@@ -259,13 +270,13 @@ object MajorDemos:
     wrong and home.
     Repeated once.
     (TROYTE)
-    */
+     */
     val plain = Method("34x34.18x12x18x12x18x12x18,18")
     val bob = Method("34x34.18x12x18x12x18x12x18,14")
     val single = Method("34x34.18x12x18x12x18x12x18,1234")
 
     val roundsRow = Row.rounds(Stage.Major)
-    
+
     val call1 = plain + bob
     val call2 = call1 + bob
     val call3 = call2 + plain * 2 + bob
@@ -278,6 +289,9 @@ object MajorDemos:
     println(course.size)
 
     val event = blockToEvent(course)
-    val song = Song("704 Kent Treble Bob Major", Section(120, Piano(Rest.q - rounds | event | rounds)))
+    val song = Song(
+      "704 Kent Treble Bob Major",
+      Section(120, ChurchBell(Rest.q - rounds | event | rounds))
+    )
     Play(Render(song))
   }
