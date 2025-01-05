@@ -1,4 +1,4 @@
-package music
+package edu.depauw.schanges
 
 trait MIDIPitch extends Pitch:
   def pitch: Int

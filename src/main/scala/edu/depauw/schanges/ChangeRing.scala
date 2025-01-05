@@ -1,4 +1,4 @@
-package music
+package edu.depauw.schanges
 
 case class Stage(size: Int)
 
@@ -172,54 +172,61 @@ object Method:
     Method((if places.isEmpty then changes else changes :+ Change(places*))*)
   }
 
-// TODO: Composition; Calls?
+// TODO: Calls?
 
-object ChangeRing:
-  @main def changeRinging(): Unit = {
-    import MIDINote.*
-    import MIDIInstrument.*
+object MajorDemos:
+  import MIDINote.*
+  import MIDIInstrument.*
 
-    val bells = Array(C(5), B(4), A(4), G(4), F(4), E(4), D(4), C(4)).map(_.e)
-    val roundsRow = Row.rounds(Stage(bells.size))
+  val bells = Array(C(5), B(4), A(4), G(4), F(4), E(4), D(4), C(4)).map(_.e)
 
-    def blockToEvent(block: Block) = block.toEvent(bells, Rest.e)
+  def blockToEvent(block: Block) = block.toEvent(bells, Rest.e)
 
-    val rounds = blockToEvent(Method(IdentityChange, IdentityChange)(roundsRow))
+  val roundsRow = Row.rounds(Stage(bells.size))
 
-    val phMethod = Method("x1x1x1x1,1")
-    
-    val phEvent = blockToEvent(phMethod(roundsRow))
-    val plainHunt = rounds | phEvent | rounds
-    
-    val phSong = Song("Plain Hunt", Section(120, Piano(Rest.q - plainHunt)))
+  val rounds = blockToEvent(Method(IdentityChange, IdentityChange)(roundsRow))
 
+  @main def plainHunt(): Unit = {
+    val method = Method("x1x1x1x1,1")
+    val course = method(roundsRow)
+
+    val event = blockToEvent(course)
+    val song = Song("Plain Hunt", Section(120, Piano(Rest.q - rounds | event | rounds)))
+    Play(Render(song))
+  }
+
+  @main def plainBob(): Unit = {
     val plain = Method("x1x1x1x1,2")
     val bob = Method("x1x1x1x1,4")
     val single = Method("x1x1x1x1,234")
 
-    // val pbCourse = (plain * 7)(roundsRow)
-    val pbCourse = plain.course(roundsRow)
-    println(pbCourse.isTrue)
-    println(pbCourse.size)
-    val pbEvent = blockToEvent(pbCourse)
-    val plainBob = rounds | pbEvent | rounds
+    // val course = (plain * 7)(roundsRow)
+    val course = plain.course(roundsRow)
+    println(course.isTrue)
+    println(course.size)
 
-    val pbSong = Song("Plain Bob", Section(120, Piano(Rest.q - plainBob)))
+    val event = blockToEvent(course)
+    val song = Song("Plain Bob", Section(120, Piano(Rest.q - rounds | event | rounds)))
+    Play(Render(song))
+  }
 
-    Play(Render(phSong))
-
+  @main def sampleComposition(): Unit = {
     /* From https://complib.org/composition/40519
-5040 Plain Bob Major
-Composed by Cornelius Charge
-23456	W	M	H
-34256			2
-46235	s	–	2
-34265	–		3
-63245	–		3
-43265	s		3
-23645	2		–
-3 part.
+    5040 Plain Bob Major
+    Composed by Cornelius Charge
+    23456	W	M	H
+    34256			2
+    46235	s	–	2
+    34265	–		3
+    63245	–		3
+    43265	s		3
+    23645	2		–
+    3 part.
     */
+    val plain = Method("x1x1x1x1,2")
+    val bob = Method("x1x1x1x1,4")
+    val single = Method("x1x1x1x1,234")
+
     val c1 = (plain * 6 + bob) * 2
     val c2 = single + plain * 4 + bob + bob
         + plain * 6 + bob
@@ -228,10 +235,13 @@ Composed by Cornelius Charge
     val c5 = bob + plain * 6
         + bob + plain * 5 + bob
 
-    val charge = (c1 + c2 + c3 + c4 + c5).course
-    val chargeCourse = charge(roundsRow)
-    println(chargeCourse.isTrue)
-    println(chargeCourse.size)
+    val course = (c1 + c2 + c3 + c4 + c5).course(roundsRow)
+    println(course.isTrue)
+    println(course.size)
+
+    val event = blockToEvent(course)
+    val song = Song("5040 Plain Bob Major", Section(120, Piano(Rest.q - rounds | event | rounds)))
+    Play(Render(song))
   }
 
   @main def nineTailorsPart1(): Unit = {
@@ -262,8 +272,12 @@ Composed by Cornelius Charge
     val call4 = call3 + plain * 2 + bob
     val call5 = call4 + plain + bob
 
-    val touch = call5.course(roundsRow)
-    println(touch.isTrue)
-    println(touch.isCourse)
-    println(touch.size)
+    val course = call5.course(roundsRow)
+    println(course.isTrue)
+    println(course.isCourse)
+    println(course.size)
+
+    val event = blockToEvent(course)
+    val song = Song("704 Kent Treble Bob Major", Section(120, Piano(Rest.q - rounds | event | rounds)))
+    Play(Render(song))
   }

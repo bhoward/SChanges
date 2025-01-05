@@ -1,4 +1,4 @@
-package music
+package edu.depauw.schanges
 
 case class Song(title: String, sections: Section*):
   def duration: Duration = sections.map(_.duration).fold(Duration.zero)(_ + _)
