@@ -1,7 +1,5 @@
 package music
 
-import cats.instances.double
-
 case class Stage(size: Int)
 
 object Stage:
@@ -208,7 +206,7 @@ object ChangeRing:
 
     val pbSong = Song("Plain Bob", Section(120, Piano(Rest.q - plainBob)))
 
-    // Play(Render(pbSong))
+    Play(Render(phSong))
 
     /* From https://complib.org/composition/40519
 5040 Plain Bob Major
