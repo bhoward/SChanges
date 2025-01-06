@@ -36,6 +36,8 @@ case class Row(positions: Int*):
   def call(composition: Composition, change: Change, observed: Int, position: Int): Block =
     composition.call(this, change, observed, position)
 
+  def calls(calls: Call*): Block = Block(this, Seq()).calls(calls*)
+
 object Row:
   def rounds(stage: Stage): Row = Row((0 until stage.size)*)
 
@@ -124,6 +126,12 @@ case class Block(first: Row, rows: Seq[Row]):
   def call(composition: Composition, change: Change, observed: Int, position: Int): Block =
     composition.call(this, change, observed, position)
 
+  def calls(calls: Call*): Block = {
+    calls.foldLeft(this) {
+      case (block, Call(comp, change, obs, pos)) => block.call(comp, change, obs, pos)
+    }
+  }
+
 trait Composition:
   def apply(row: Row): Block
 
@@ -205,7 +213,7 @@ object Method:
     Method((if places.isEmpty then changes else changes :+ Change(places*))*)
   }
 
-// TODO: Calls?
+case class Call(composition: Composition, change: Change, observed: Int, position: Int)
 
 object MajorDemos:
   import MIDINote.*
@@ -293,72 +301,33 @@ object MajorDemos:
     val middle = 6
     val home = 8
 
-    val course = roundsRow // TODO improve this api
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, single, obs, wrong)
-      .call(plain, bob, obs, middle)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, wrong)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, wrong)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, single, obs, wrong)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, wrong)
-      .call(plain, bob, obs, wrong)
-      .call(plain, bob, obs, home)
+    val bobWrong = Call(plain, bob, obs, wrong)
+    val bobMiddle = Call(plain, bob, obs, middle)
+    val bobHome = Call(plain, bob, obs, home)
+    val singleWrong = Call(plain, single, obs, wrong)
 
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, single, obs, wrong)
-      .call(plain, bob, obs, middle)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, wrong)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, wrong)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, single, obs, wrong)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, wrong)
-      .call(plain, bob, obs, wrong)
-      .call(plain, bob, obs, home)
+    val course = roundsRow.calls(
+      bobHome, bobHome,
+      singleWrong, bobMiddle, bobHome, bobHome,
+      bobWrong, bobHome, bobHome, bobHome,
+      bobWrong, bobHome, bobHome, bobHome,
+      singleWrong, bobHome, bobHome, bobHome,
+      bobWrong, bobWrong, bobHome,
 
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, single, obs, wrong)
-      .call(plain, bob, obs, middle)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, wrong)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, wrong)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, single, obs, wrong)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, home)
-      .call(plain, bob, obs, wrong)
-      .call(plain, bob, obs, wrong)
-      .call(plain, bob, obs, home)
+      bobHome, bobHome,
+      singleWrong, bobMiddle, bobHome, bobHome,
+      bobWrong, bobHome, bobHome, bobHome,
+      bobWrong, bobHome, bobHome, bobHome,
+      singleWrong, bobHome, bobHome, bobHome,
+      bobWrong, bobWrong, bobHome,
+
+      bobHome, bobHome,
+      singleWrong, bobMiddle, bobHome, bobHome,
+      bobWrong, bobHome, bobHome, bobHome,
+      bobWrong, bobHome, bobHome, bobHome,
+      singleWrong, bobHome, bobHome, bobHome,
+      bobWrong, bobWrong, bobHome
+    )
 
     println(course.isTrue)
     println(course.size)
