@@ -352,16 +352,25 @@ object MajorDemos:
     (TROYTE)
      */
     val plain = Method("34x34.18x12x18x12x18x12x18,18")
-    val bob = Method("34x34.18x12x18x12x18x12x18,14")
-    val single = Method("34x34.18x12x18x12x18x12x18,1234")
+    val bob = Change("14")
+    val single = Change("1234")
 
-    val call1 = plain + bob
-    val call2 = call1 + bob
-    val call3 = call2 + plain * 2 + bob
-    val call4 = call3 + plain * 2 + bob
-    val call5 = call4 + plain + bob
+    val obs = 8
+    val middle = 6
+    val before = 1
+    val wrong = 7
+    val home = 8
 
-    val course = call5.course(roundsRow)
+    val bobMiddle = Call(plain, bob, obs, middle)
+    val bobBefore = Call(plain, bob, obs, before)
+    val bobWrong = Call(plain, bob, obs, wrong)
+    val bobHome = Call(plain, bob, obs, home)
+
+    val course = roundsRow.calls(
+      bobMiddle, bobMiddle, bobBefore, bobWrong, bobHome,
+      bobMiddle, bobMiddle, bobBefore, bobWrong, bobHome
+    )
+
     println(course.isTrue)
     println(course.isCourse)
     println(course.size)
