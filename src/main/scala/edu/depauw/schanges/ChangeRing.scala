@@ -33,8 +33,8 @@ case class Row(positions: Int*):
 
   def indexOf(bell: Int): Int = positions.indexOf(bell)
 
-  def call(composition: Composition, change: Change, observed: Int, position: Int): Block =
-    composition.call(this, change, observed, position)
+  def call(plain: Composition, alteration: Composition, observed: Int, position: Int, count: Int): Block =
+    plain.call(this, alteration, observed, position, count)
 
   def calls(calls: Call*): Block = Block(this, Seq()).calls(calls*)
 
@@ -118,19 +118,20 @@ case class Block(first: Row, rows: Seq[Row]):
 
   def observe(bell: Int): Int = rows(rows.size - 3).indexOf(bell - 1) + 1
 
-  def alter(change: Change): Block = {
-    val init = rows.init
-    Block(first, rows.init :+ change(init.last))
+  def alter(alteration: Composition): Block = {
+    alteration(Block(first, rows.dropRight(alteration.size)))
   }
 
-  def call(composition: Composition, change: Change, observed: Int, position: Int): Block =
-    composition.call(this, change, observed, position)
+  def call(plain: Composition, alteration: Composition, observed: Int, position: Int, count: Int): Block =
+    plain.call(this, alteration, observed, position, count)
 
   def calls(calls: Call*): Block = {
     calls.foldLeft(this) {
-      case (block, Call(comp, change, obs, pos)) => block.call(comp, change, obs, pos)
+      case (block, Call(plain, alt, obs, pos, count)) => block.call(plain, alt, obs, pos, count)
     }
   }
+
+  override def toString: String = rows.mkString("\n")
 
 trait Composition:
   def apply(row: Row): Block
@@ -149,16 +150,22 @@ trait Composition:
     result
   }
 
-  def call(row: Row, change: Change, observed: Int, position: Int): Block = {
+  def call(row: Row, alteration: Composition, observed: Int, position: Int, count: Int): Block = {
     var result = apply(row)
-    while result.observe(observed) != position do result = apply(result)
-    result.alter(change)
+    var n = 1
+    while result.observe(observed) != position || n != count do
+      if result.observe(observed) == position then n += 1
+      result = apply(result)
+    result.alter(alteration)
   }
 
-  def call(block: Block, change: Change, observed: Int, position: Int): Block = {
+  def call(block: Block, alteration: Composition, observed: Int, position: Int, count: Int): Block = {
     var result = apply(block)
-    while result.observe(observed) != position do result = apply(result)
-    result.alter(change)
+    var n = 1
+    while result.observe(observed) != position || n != count do
+      if result.observe(observed) == position then n += 1
+      result = apply(result)
+    result.alter(alteration)
   }
 
   def andThen(that: Composition): Composition = SeqComposition(this, that)
@@ -169,10 +176,14 @@ trait Composition:
 
   def *(times: Int): Composition = this.repeat(times)
 
+  def size: Int
+
 case class SeqComposition(parts: Composition*) extends Composition:
   def apply(row: Row): Block = parts.foldLeft(Block(row, Seq())) { case (b, c) =>
     c(b)
   }
+
+  def size: Int = parts.map(_.size).sum
 
 // TODO ParComposition? Add covers?
 
@@ -186,6 +197,8 @@ case class Method(changes: Change*) extends Composition:
       ._2
     Block(row, rows)
   }
+
+  def size: Int = changes.size
 
 object Method:
   def apply(notation: String): Method = {
@@ -213,7 +226,7 @@ object Method:
     Method((if places.isEmpty then changes else changes :+ Change(places*))*)
   }
 
-case class Call(composition: Composition, change: Change, observed: Int, position: Int)
+case class Call(plain: Composition, alteration: Composition, observed: Int, position: Int, count: Int = 1)
 
 object MajorDemos:
   import MIDINote.*
@@ -293,12 +306,12 @@ object MajorDemos:
     3 part.
      */
     val plain = Method("x1x1x1x1,2")
-    val bob = Change("4")
-    val single = Change("234")
+    val bob = Method("4")
+    val single = Method("234")
 
     val obs = 8
-    val wrong = 7
     val middle = 6
+    val wrong = 7
     val home = 8
 
     val bobWrong = Call(plain, bob, obs, wrong)
@@ -352,12 +365,12 @@ object MajorDemos:
     (TROYTE)
      */
     val plain = Method("34x34.18x12x18x12x18x12x18,18")
-    val bob = Change("14")
-    val single = Change("1234")
+    val bob = Method("14")
+    val single = Method("1234")
 
     val obs = 8
-    val middle = 6
     val before = 1
+    val middle = 6
     val wrong = 7
     val home = 8
 
@@ -376,4 +389,67 @@ object MajorDemos:
     println(course.size)
 
     Play(blockToMidi(rounds ++ course ++ rounds))
+  }
+
+  @main def nineTailorsPart2(): Unit = {
+    /*
+    A FULL PEAL OF GRANDSIRE TRIPLES (HOLT'S TEN-PART PEAL)
+
+    5040
+    By the Part Ends
+    First Half  Second Half
+    246375      257364
+    267453      276543
+    275634      264735
+    253746      243657
+    235476      234567
+    2nd the Observation
+
+    Call her:
+      1st Half) Out of the hunt, middle, in and out at 5, right,
+      middle, wrong, right, middle and into the hunt (4 times repeated).
+      2nd Half) Out of the hunt, wrong, right, middle, wrong, right,
+      in and out at 5, wrong and into the hunt (4 times repeated).
+    The last call in each half is a single; Holt's Single must be used
+    in ringing this peal.
+
+    See also https://complib.org/composition/29040
+    */
+    val plain = Method("3.1.7.1.7.1.7.1.7.1.7.1.7.1") // 3,1.7.1.7.1.7.1
+    val bob = Method("3.1") // need to replace last two changes
+    val single = Method("3.14567")
+
+    val obs = 2
+    val in = 3
+    val out = 4
+    val middle = 5
+    val wrong = 6
+    val right = 7
+
+    val bobIn = Call(plain, bob, obs, in)
+    val bobOut = Call(plain, bob, obs, out)
+    val bobOutAt5 = Call(plain, bob, obs, out, 5)
+    val bobMiddle = Call(plain, bob, obs, middle)
+    val bobWrong = Call(plain, bob, obs, wrong)
+    val bobRight = Call(plain, bob, obs, right)
+    val singleIn = Call(plain, single, obs, in)
+
+    val course = roundsRow.calls(
+      bobOut, bobMiddle, bobIn, bobOutAt5, bobRight, bobMiddle, bobWrong, bobRight, bobMiddle, bobIn,
+      bobOut, bobMiddle, bobIn, bobOutAt5, bobRight, bobMiddle, bobWrong, bobRight, bobMiddle, bobIn,
+      bobOut, bobMiddle, bobIn, bobOutAt5, bobRight, bobMiddle, bobWrong, bobRight, bobMiddle, bobIn,
+      bobOut, bobMiddle, bobIn, bobOutAt5, bobRight, bobMiddle, bobWrong, bobRight, bobMiddle, bobIn,
+      bobOut, bobMiddle, bobIn, bobOutAt5, bobRight, bobMiddle, bobWrong, bobRight, bobMiddle, singleIn,
+      bobOut, bobWrong, bobRight, bobMiddle, bobWrong, bobRight, bobIn, bobOutAt5, bobWrong, bobIn,
+      bobOut, bobWrong, bobRight, bobMiddle, bobWrong, bobRight, bobIn, bobOutAt5, bobWrong, bobIn,
+      bobOut, bobWrong, bobRight, bobMiddle, bobWrong, bobRight, bobIn, bobOutAt5, bobWrong, bobIn,
+      bobOut, bobWrong, bobRight, bobMiddle, bobWrong, bobRight, bobIn, bobOutAt5, bobWrong, bobIn,
+      bobOut, bobWrong, bobRight, bobMiddle, bobWrong, bobRight, bobIn, bobOutAt5, bobWrong, singleIn
+    )
+
+    println(course.isTrue)
+    println(course.isCourse)
+    println(course.size)
+
+    // Play(blockToMidi(rounds ++ course ++ rounds))
   }
