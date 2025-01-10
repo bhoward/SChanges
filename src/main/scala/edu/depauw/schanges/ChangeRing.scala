@@ -369,19 +369,19 @@ object MajorDemos:
     val single = Method("1234")
 
     val obs = 8
-    val before = 1
     val middle = 6
+    val before = 1
     val wrong = 7
     val home = 8
 
-    val bobMiddle = Call(plain, bob, obs, middle)
-    val bobBefore = Call(plain, bob, obs, before)
-    val bobWrong = Call(plain, bob, obs, wrong)
-    val bobHome = Call(plain, bob, obs, home)
+    val M = Call(plain, bob, obs, middle)
+    val B = Call(plain, bob, obs, before)
+    val W = Call(plain, bob, obs, wrong)
+    val H = Call(plain, bob, obs, home)
 
     val course = roundsRow.calls(
-      bobMiddle, bobMiddle, bobBefore, bobWrong, bobHome,
-      bobMiddle, bobMiddle, bobBefore, bobWrong, bobHome
+      M, M, B, W, H,
+      M, M, B, W, H
     )
 
     println(course.isTrue)
@@ -426,25 +426,25 @@ object MajorDemos:
     val wrong = 6
     val right = 7
 
-    val bobIn = Call(plain, bob, obs, in)
-    val bobOut = Call(plain, bob, obs, out)
-    val bobOutAt5 = Call(plain, bob, obs, out, 5)
-    val bobMiddle = Call(plain, bob, obs, middle)
-    val bobWrong = Call(plain, bob, obs, wrong)
-    val bobRight = Call(plain, bob, obs, right)
-    val singleIn = Call(plain, single, obs, in)
+    val I = Call(plain, bob, obs, in)
+    val O = Call(plain, bob, obs, out)
+    val V = Call(plain, bob, obs, out, 5)
+    val M = Call(plain, bob, obs, middle)
+    val W = Call(plain, bob, obs, wrong)
+    val R = Call(plain, bob, obs, right)
+    val sI = Call(plain, single, obs, in)
 
     val course = roundsRow.calls(
-      bobOut, bobMiddle, bobIn, bobOutAt5, bobRight, bobMiddle, bobWrong, bobRight, bobMiddle, bobIn,
-      bobOut, bobMiddle, bobIn, bobOutAt5, bobRight, bobMiddle, bobWrong, bobRight, bobMiddle, bobIn,
-      bobOut, bobMiddle, bobIn, bobOutAt5, bobRight, bobMiddle, bobWrong, bobRight, bobMiddle, bobIn,
-      bobOut, bobMiddle, bobIn, bobOutAt5, bobRight, bobMiddle, bobWrong, bobRight, bobMiddle, bobIn,
-      bobOut, bobMiddle, bobIn, bobOutAt5, bobRight, bobMiddle, bobWrong, bobRight, bobMiddle, singleIn,
-      bobOut, bobWrong, bobRight, bobMiddle, bobWrong, bobRight, bobIn, bobOutAt5, bobWrong, bobIn,
-      bobOut, bobWrong, bobRight, bobMiddle, bobWrong, bobRight, bobIn, bobOutAt5, bobWrong, bobIn,
-      bobOut, bobWrong, bobRight, bobMiddle, bobWrong, bobRight, bobIn, bobOutAt5, bobWrong, bobIn,
-      bobOut, bobWrong, bobRight, bobMiddle, bobWrong, bobRight, bobIn, bobOutAt5, bobWrong, bobIn,
-      bobOut, bobWrong, bobRight, bobMiddle, bobWrong, bobRight, bobIn, bobOutAt5, bobWrong, singleIn
+      O, M, I, V, R, M, W, R, M, I,
+      O, M, I, V, R, M, W, R, M, I,
+      O, M, I, V, R, M, W, R, M, I,
+      O, M, I, V, R, M, W, R, M, I,
+      O, M, I, V, R, M, W, R, M, sI,
+      O, W, R, M, W, R, I, V, W, I,
+      O, W, R, M, W, R, I, V, W, I,
+      O, W, R, M, W, R, I, V, W, I,
+      O, W, R, M, W, R, I, V, W, I,
+      O, W, R, M, W, R, I, V, W, sI
     )
 
     println(course.isTrue)
@@ -469,7 +469,7 @@ object MajorDemos:
 
     Call her the last whole turn, out quick, in slow, the second half turn and out slow.
     Four times repeated.
-    (Troyte.)
+    (TROYTE)
     */
     val plain = Method("3.1.7.3.1.3,1")
     val oddBob = Method("5.3.1.3.1.3.7.1.3.1")
@@ -507,6 +507,78 @@ object MajorDemos:
     //   + bob2
     //   + bob2
     //   + plain * 2) * 5)(roundsRow)
+
+    println(course.isTrue)
+    println(course.isCourse)
+    println(course.size)
+
+    Play(blockToMidi(rounds ++ course ++ rounds))
+  }
+
+  @main def nineTailorsPart4(): Unit = {
+    /*
+    A FULL PEAL OF KENT TREBLE BOB MAJOR (Three Parts)
+
+    5376
+    By the Course Ends
+    6 5 4 3 2
+    3 4 5 6 2
+    2 3 6 4 5
+    3 5 6 4 2
+    4 2 3 5 6
+    8th the Observation.
+    
+    Call her before, middle with a double, wrong with a double and home;
+    wrong with a double and home with a double; middle with a double,
+    wrong and home with a double; before, middle with a double,
+    wrong and home with a double; before, middle with a double and
+    wrong with a double. Twice repeated.
+    (J. WILDE)
+
+    Correction from https://www.handbellringing.co.uk/blog/a-small-dorothy-l-sayers-mystery:
+    M  B  W  H  23456
+    -----------------
+    2  -  2  1  65432
+          2  2  34562
+    2     1  2  23645
+    2  -  1  2  35624
+       -  2     42356
+    -----------------
+    3 part.
+    */
+    val plain = Method("34x34.18x12x18x12x18x12x18,18")
+    val bob = Method("14")
+
+    val obs = 8
+    val middle = 6
+    val before = 1
+    val wrong = 7
+    val home = 8
+
+    val M = Call(plain, bob, obs, middle)
+    val B = Call(plain, bob, obs, before)
+    val W = Call(plain, bob, obs, wrong)
+    val H = Call(plain, bob, obs, home)
+    val toRounds = Call(plain, plain, obs, 7)
+
+    val course = roundsRow.calls(
+      M, M, B, W, W, H,
+      W, W, H, H,
+      M, M, W, H, H,
+      M, M, B, W, H, H,
+      B, W, W,
+      M, M, B, W, W, H,
+      W, W, H, H,
+      M, M, W, H, H,
+      M, M, B, W, H, H,
+      B, W, W,
+      M, M, B, W, W, H,
+      W, W, H, H,
+      M, M, W, H, H,
+      M, M, B, W, H, H,
+      B, W, W,
+      toRounds
+    )
 
     println(course.isTrue)
     println(course.isCourse)
