@@ -453,3 +453,64 @@ object MajorDemos:
 
     Play(blockToMidi(rounds ++ course ++ rounds))
   }
+
+  @main def nineTailorsPart3(): Unit = {
+    /*
+    A SHORT TOUCH OF STEDMAN'S TRIPLES (Five Parts)
+
+    840
+    By the Part Ends
+    5 6 1 2 3 4
+    3 4 1 5 6 2
+    6 2 1 3 4 5
+    4 5 1 6 2 3
+    2 3 1 4 5 6
+    Treble the observation.
+
+    Call her the last whole turn, out quick, in slow, the second half turn and out slow.
+    Four times repeated.
+    (Troyte.)
+    */
+    val plain = Method("3.1.7.3.1.3,1")
+    val oddBob = Method("5.3.1.3.1.3.7.1.3.1")
+    val evenBob = Method("5.1.3.1")
+
+    val obs = 1
+    val last = 5
+    val outQ = 7
+    val inS = 1
+    val second = 3
+    val outS = 5
+
+    val bobLast = Call(plain, oddBob, obs, last)
+    val bobOutQ = Call(plain, oddBob, obs, outQ)
+    val bobInS = Call(plain, oddBob, obs, inS)
+    val bobSecond = Call(plain, evenBob, obs, second)
+    val bobOutS = Call(plain, evenBob, obs, outS)
+    val toRounds = Call(plain, plain, obs, 2)
+
+    val course = roundsRow.calls(
+      bobLast, bobOutQ, bobInS, bobSecond, bobOutS,
+      bobLast, bobOutQ, bobInS, bobSecond, bobOutS,
+      bobLast, bobOutQ, bobInS, bobSecond, bobOutS,
+      bobLast, bobOutQ, bobInS, bobSecond, bobOutS,
+      bobLast, bobOutQ, bobInS, bobSecond, bobOutS,
+      toRounds
+    )
+
+    // val bob = Method("3.1.5.3.1.3.1.3.7.1.3.1")
+    // val bob2 = Method("3.1.7.3.1.3.1.3.5.1.3.1")
+    //
+    // val course = ((plain * 4 + bob
+    //   + plain * 2 + bob
+    //   + plain + bob
+    //   + bob2
+    //   + bob2
+    //   + plain * 2) * 5)(roundsRow)
+
+    println(course.isTrue)
+    println(course.isCourse)
+    println(course.size)
+
+    Play(blockToMidi(rounds ++ course ++ rounds))
+  }
