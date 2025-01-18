@@ -1,6 +1,20 @@
 package edu.depauw.schanges
 
-case class Stage(size: Int)
+object Bell:
+  import MIDINote.*
+  
+  val names = "1234567890ETABCDFGHJKLMNPQRSUVWYZ"
+
+  val pitches = Seq(
+    C(4), D(4), E(4), F(4), G(4), A(4), B(4),
+    C(5), D(5), E(5), F(5), G(5), A(5), B(5),
+    C(6), D(6), E(6), F(6), G(6), A(6), B(6),
+    C(7), D(7), E(7), F(7), G(7), A(7), B(7),
+    C(8), D(8), E(8), F(8), G(8)
+  )
+
+case class Stage(size: Int):
+  def pitches: Seq[MIDIMelNote] = Bell.pitches.take(size).reverse
 
 object Stage:
   val Singles = Stage(3)
@@ -13,8 +27,6 @@ object Stage:
   val Royal = Stage(10)
   val Cinques = Stage(11)
   val Maximus = Stage(12)
-
-val Bells = "1234567890ETABCDFGHJKLMNPQRSUVWYZ"
 
 case class Row(positions: Int*):
   val stage: Stage = Stage(positions.size)
@@ -29,7 +41,7 @@ case class Row(positions: Int*):
   }
 
   override def toString: String =
-    (0 until stage.size).map(i => Bells(apply(i))).mkString
+    (0 until stage.size).map(i => Bell.names(apply(i))).mkString
 
   def indexOf(bell: Int): Int = positions.indexOf(bell)
 
@@ -94,6 +106,8 @@ case class SeqChange(positions: Int*) extends Change:
   }
 
 case class Block(first: Row, rows: Seq[Row]):
+  def stage: Stage = first.stage
+
   def last: Row = if rows.isEmpty then first else rows.last
 
   def toEvent[P <: Pitch, V <: Volume](
@@ -205,8 +219,8 @@ object Method:
     case class State(changes: Seq[Change], places: Seq[Int])
 
     val State(changes, places) = notation.foldLeft(State(Seq(), Seq())) {
-      case (state, c) if Bells.contains(c) =>
-        state.copy(places = state.places :+ Bells.indexOf(c))
+      case (state, c) if Bell.names.contains(c) =>
+        state.copy(places = state.places :+ Bell.names.indexOf(c))
       case (state, c) if "Xx-".contains(c) =>
         if state.places.isEmpty
         then State(state.changes :+ CrossChange, Seq())
@@ -229,18 +243,16 @@ object Method:
 case class Call(plain: Composition, alteration: Composition, observed: Int, position: Int, count: Int = 1)
 
 object MajorDemos:
-  import MIDINote.*
   import MIDIInstrument.*
 
-  val bells = Array(C(5), B(4), A(4), G(4), F(4), E(4), D(4), C(4)).map(_.e)
-
   def blockToMidi(block: Block, secondsPerRow: Double = 2.0) = {
-    val event = block.toEvent(bells, Rest.e)
-    val song = Song("", Section(60 / secondsPerRow * bells.size / 2, ChurchBell(Rest.q - event)))
+    val stage = block.stage
+    val event = block.toEvent(stage.pitches, Rest.q)
+    val song = Song("", Section(60 / secondsPerRow * stage.size, ChurchBell(Rest.q - event)))
     Render(song)
   }
 
-  val roundsRow = Row.rounds(Stage(bells.size))
+  val roundsRow = Row.rounds(Stage.Major)
   val rounds = Method(IdentityChange, IdentityChange)(roundsRow)
 
   @main def plainHunt(): Unit = {
