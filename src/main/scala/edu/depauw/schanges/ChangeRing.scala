@@ -269,10 +269,70 @@ object Demos:
     Render(song)
   }
 
-  @main def plainHunt(): Unit = {
+  @main def plainHuntSingles(): Unit = {
+    val method = Method(Stage.Singles, "x1x,1")
+    val course = method()
+    Play(blockToMidi(course, secondsPerRow = 1.5))
+  }
+
+  @main def plainHuntMinimus(): Unit = {
+    val method = Method(Stage.Minimus, "x1x1,1")
+    val course = method()
+    Play(blockToMidi(course, secondsPerRow = 1.5))
+  }
+
+  @main def plainHuntDoubles(): Unit = {
+    val method = Method(Stage.Doubles, "x1x1x,1")
+    val course = method()
+    Play(blockToMidi(course, secondsPerRow = 1.5))
+  }
+
+  @main def plainHuntMinor(): Unit = {
+    val method = Method(Stage.Minor, "x1x1x1,1")
+    val course = method()
+    Play(blockToMidi(course))
+  }
+
+  @main def plainHuntTriples(): Unit = {
+    val method = Method(Stage.Triples, "x1x1x1x,1")
+    val course = method()
+    Play(blockToMidi(course))
+  }
+
+  @main def plainHuntMajor(): Unit = {
     val method = Method(Stage.Major, "x1x1x1x1,1")
     val course = method()
     Play(blockToMidi(course))
+  }
+
+  @main def plainHuntCaters(): Unit = {
+    val method = Method(Stage.Caters, "x1x1x1x1x,1")
+    val course = method()
+    Play(blockToMidi(course))
+  }
+
+  @main def plainHuntRoyal(): Unit = {
+    val method = Method(Stage.Royal, "x1x1x1x1x1,1")
+    val course = method()
+    Play(blockToMidi(course))
+  }
+
+  @main def plainHuntCinques(): Unit = {
+    val method = Method(Stage.Cinques, "x1x1x1x1x1x,1")
+    val course = method()
+    Play(blockToMidi(course, secondsPerRow = 2.5))
+  }
+
+  @main def plainHuntMaximus(): Unit = {
+    val method = Method(Stage.Maximus, "x1x1x1x1x1x1,1")
+    val course = method()
+    Play(blockToMidi(course, secondsPerRow = 3))
+  }
+
+  @main def plainHunt24(): Unit = {
+    val method = Method(Stage(24), "x1x1x1x1x1x1x1x1x1x1x1x1,1")
+    val course = method()
+    Play(blockToMidi(course, secondsPerRow = 4.5))
   }
 
   @main def plainBob(): Unit = {
