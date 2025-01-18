@@ -1,5 +1,7 @@
 package edu.depauw.schanges
 
+import edu.depauw.schanges.Rest.t
+
 object Bell:
   import MIDINote.*
   
@@ -84,7 +86,7 @@ object Change:
     SeqChange(transposition*)
   }
 
-  def apply(notation: String): Change = Method(notation).changes(0)
+  // def apply(notation: String): Change = Method(notation).changes(0)
 
 object IdentityChange extends Change:
   def apply(position: Int): Int = position
@@ -148,11 +150,15 @@ case class Block(first: Row, rows: Seq[Row]):
   override def toString: String = rows.mkString("\n")
 
 trait Composition:
-  def apply(row: Row): Block
+  def stage: Stage
+
+  def rounds: Row = Row.rounds(stage)
+
+  def apply(row: Row = rounds): Block
 
   def apply(block: Block): Block = block ++ apply(block.last)
 
-  def course(row: Row): Block = {
+  def course(row: Row = rounds): Block = {
     var result = apply(row)
     while !result.isCourse do result = apply(result)
     result
@@ -182,6 +188,8 @@ trait Composition:
     result.alter(alteration)
   }
 
+  def calls(calls: Call*): Block = rounds.calls(calls*)
+
   def andThen(that: Composition): Composition = SeqComposition(this, that)
 
   def repeat(times: Int): Composition = SeqComposition(Seq.fill(times)(this)*)
@@ -193,15 +201,18 @@ trait Composition:
   def size: Int
 
 case class SeqComposition(parts: Composition*) extends Composition:
-  def apply(row: Row): Block = parts.foldLeft(Block(row, Seq())) { case (b, c) =>
-    c(b)
-  }
+  def stage: Stage = parts(0).stage
+
+  def apply(row: Row): Block =
+    parts.foldLeft(Block(row, Seq())) { case (b, c) =>
+      c(b)
+    }
 
   def size: Int = parts.map(_.size).sum
 
 // TODO ParComposition? Add covers?
 
-case class Method(changes: Change*) extends Composition:
+case class Method(stage: Stage, changes: Change*) extends Composition:
   def apply(row: Row): Block = {
     val rows = changes
       .foldLeft((row, Seq[Row]())) { case ((r, rs), c) =>
@@ -215,7 +226,7 @@ case class Method(changes: Change*) extends Composition:
   def size: Int = changes.size
 
 object Method:
-  def apply(notation: String): Method = {
+  def apply(stage: Stage, notation: String): Method = {
     case class State(changes: Seq[Change], places: Seq[Int])
 
     val State(changes, places) = notation.foldLeft(State(Seq(), Seq())) {
@@ -237,39 +248,42 @@ object Method:
         state
     }
 
-    Method((if places.isEmpty then changes else changes :+ Change(places*))*)
+    Method(stage, (if places.isEmpty then changes else changes :+ Change(places*))*)
   }
 
 case class Call(plain: Composition, alteration: Composition, observed: Int, position: Int, count: Int = 1)
 
-object MajorDemos:
-  import MIDIInstrument.*
-
-  def blockToMidi(block: Block, secondsPerRow: Double = 2.0) = {
+object Demos:
+  def blockToMidi(block: Block, addRounds: Boolean = true, secondsPerRow: Double = 2.0) = {
     val stage = block.stage
-    val event = block.toEvent(stage.pitches, Rest.q)
-    val song = Song("", Section(60 / secondsPerRow * stage.size, ChurchBell(Rest.q - event)))
+    val fullBlock = if addRounds then
+      val rounds = Method(stage, IdentityChange, IdentityChange)()
+      rounds ++ block ++ rounds
+    else
+      block
+
+    val event = fullBlock.toEvent(stage.pitches, Rest.q)
+    val song = Song("",
+      Section(60 / secondsPerRow * stage.size,
+      MIDIInstrument.ChurchBell(Rest.q - event)))
     Render(song)
   }
 
-  val roundsRow = Row.rounds(Stage.Major)
-  val rounds = Method(IdentityChange, IdentityChange)(roundsRow)
-
   @main def plainHunt(): Unit = {
-    val method = Method("x1x1x1x1,1")
-    val course = method(roundsRow)
-    Play(blockToMidi(rounds ++ course ++ rounds))
+    val method = Method(Stage.Major, "x1x1x1x1,1")
+    val course = method()
+    Play(blockToMidi(course))
   }
 
   @main def plainBob(): Unit = {
-    val plain = Method("x1x1x1x1,2")
+    val plain = Method(Stage.Major, "x1x1x1x1,2")
 
-    // val course = (plain * 7)(roundsRow)
-    val course = plain.course(roundsRow)
+    // val course = (plain * 7)()
+    val course = plain.course()
     println(course.isTrue)
     println(course.size)
 
-    Play(blockToMidi(rounds ++ course ++ rounds))
+    Play(blockToMidi(course))
   }
 
   @main def sampleComposition(): Unit = {
@@ -285,9 +299,9 @@ object MajorDemos:
     23645	2		–
     3 part.
      */
-    val plain = Method("x1x1x1x1,2")
-    val bob = Method("x1x1x1x1,4")
-    val single = Method("x1x1x1x1,234")
+    val plain = Method(Stage.Major, "x1x1x1x1,2")
+    val bob = Method(Stage.Major, "x1x1x1x1,4")
+    val single = Method(Stage.Major, "x1x1x1x1,234")
 
     val c1 = (plain * 6 + bob) * 2
     val c2 = single + plain * 4 + bob + bob
@@ -297,11 +311,11 @@ object MajorDemos:
     val c5 = bob + plain * 6
       + bob + plain * 5 + bob
 
-    val course = (c1 + c2 + c3 + c4 + c5).course(roundsRow)
+    val course = (c1 + c2 + c3 + c4 + c5).course()
     println(course.isTrue)
     println(course.size)
 
-    Play(blockToMidi(rounds ++ course ++ rounds))
+    Play(blockToMidi(course))
   }
 
   @main def sampleComposition2(): Unit = {
@@ -317,9 +331,9 @@ object MajorDemos:
     23645	2		–
     3 part.
      */
-    val plain = Method("x1x1x1x1,2")
-    val bob = Method("4")
-    val single = Method("234")
+    val plain = Method(Stage.Major, "x1x1x1x1,2")
+    val bob = Method(Stage.Major, "4")
+    val single = Method(Stage.Major, "234")
 
     val obs = 8
     val middle = 6
@@ -331,7 +345,7 @@ object MajorDemos:
     val bobHome = Call(plain, bob, obs, home)
     val singleWrong = Call(plain, single, obs, wrong)
 
-    val course = roundsRow.calls(
+    val course = plain.calls(
       bobHome, bobHome,
       singleWrong, bobMiddle, bobHome, bobHome,
       bobWrong, bobHome, bobHome, bobHome,
@@ -357,7 +371,7 @@ object MajorDemos:
     println(course.isTrue)
     println(course.size)
 
-    Play(blockToMidi(rounds ++ course ++ rounds))
+    Play(blockToMidi(course))
   }
 
   @main def nineTailorsPart1(): Unit = {
@@ -376,9 +390,9 @@ object MajorDemos:
     Repeated once.
     (TROYTE)
      */
-    val plain = Method("34x34.18x12x18x12x18x12x18,18")
-    val bob = Method("14")
-    val single = Method("1234")
+    val plain = Method(Stage.Major, "34x34.18x12x18x12x18x12x18,18")
+    val bob = Method(Stage.Major, "14")
+    val single = Method(Stage.Major, "1234")
 
     val obs = 8
     val middle = 6
@@ -391,7 +405,7 @@ object MajorDemos:
     val W = Call(plain, bob, obs, wrong)
     val H = Call(plain, bob, obs, home)
 
-    val course = roundsRow.calls(
+    val course = plain.calls(
       M, M, B, W, H,
       M, M, B, W, H
     )
@@ -400,7 +414,7 @@ object MajorDemos:
     println(course.isCourse)
     println(course.size)
 
-    Play(blockToMidi(rounds ++ course ++ rounds))
+    Play(blockToMidi(course))
   }
 
   @main def nineTailorsPart2(): Unit = {
@@ -427,9 +441,9 @@ object MajorDemos:
 
     See also https://complib.org/composition/29040
     */
-    val plain = Method("3.1.7.1.7.1.7.1.7.1.7.1.7.1") // 3,1.7.1.7.1.7.1
-    val bob = Method("3.1") // need to replace last two changes
-    val single = Method("3.14567")
+    val plain = Method(Stage.Major, "3.1.7.1.7.1.7.1.7.1.7.1.7.1") // 3,1.7.1.7.1.7.1
+    val bob = Method(Stage.Major, "3.1") // need to replace last two changes
+    val single = Method(Stage.Major, "3.14567")
 
     val obs = 2
     val in = 3
@@ -446,7 +460,7 @@ object MajorDemos:
     val R = Call(plain, bob, obs, right)
     val sI = Call(plain, single, obs, in)
 
-    val course = roundsRow.calls(
+    val course = plain.calls(
       O, M, I, V, R, M, W, R, M, I,
       O, M, I, V, R, M, W, R, M, I,
       O, M, I, V, R, M, W, R, M, I,
@@ -463,7 +477,7 @@ object MajorDemos:
     println(course.isCourse)
     println(course.size)
 
-    Play(blockToMidi(rounds ++ course ++ rounds))
+    Play(blockToMidi(course))
   }
 
   @main def nineTailorsPart3(): Unit = {
@@ -483,9 +497,9 @@ object MajorDemos:
     Four times repeated.
     (TROYTE)
     */
-    val plain = Method("3.1.7.3.1.3,1")
-    val oddBob = Method("5.3.1.3.1.3.7.1.3.1")
-    val evenBob = Method("5.1.3.1")
+    val plain = Method(Stage.Major, "3.1.7.3.1.3,1")
+    val oddBob = Method(Stage.Major, "5.3.1.3.1.3.7.1.3.1")
+    val evenBob = Method(Stage.Major, "5.1.3.1")
 
     val obs = 1
     val last = 5
@@ -501,7 +515,7 @@ object MajorDemos:
     val bobOutS = Call(plain, evenBob, obs, outS)
     val toRounds = Call(plain, plain, obs, 2)
 
-    val course = roundsRow.calls(
+    val course = plain.calls(
       bobLast, bobOutQ, bobInS, bobSecond, bobOutS,
       bobLast, bobOutQ, bobInS, bobSecond, bobOutS,
       bobLast, bobOutQ, bobInS, bobSecond, bobOutS,
@@ -518,13 +532,13 @@ object MajorDemos:
     //   + plain + bob
     //   + bob2
     //   + bob2
-    //   + plain * 2) * 5)(roundsRow)
+    //   + plain * 2) * 5)()
 
     println(course.isTrue)
     println(course.isCourse)
     println(course.size)
 
-    Play(blockToMidi(rounds ++ course ++ rounds))
+    Play(blockToMidi(course))
   }
 
   @main def nineTailorsPart4(): Unit = {
@@ -558,8 +572,8 @@ object MajorDemos:
     -----------------
     3 part.
     */
-    val plain = Method("34x34.18x12x18x12x18x12x18,18")
-    val bob = Method("14")
+    val plain = Method(Stage.Major, "34x34.18x12x18x12x18x12x18,18")
+    val bob = Method(Stage.Major, "14")
 
     val obs = 8
     val middle = 6
@@ -573,7 +587,7 @@ object MajorDemos:
     val H = Call(plain, bob, obs, home)
     val toRounds = Call(plain, plain, obs, 7)
 
-    val course = roundsRow.calls(
+    val course = plain.calls(
       M, M, B, W, W, H,
       W, W, H, H,
       M, M, W, H, H,
@@ -596,5 +610,8 @@ object MajorDemos:
     println(course.isCourse)
     println(course.size)
 
-    Play(blockToMidi(rounds ++ course ++ rounds))
+    Play(blockToMidi(course))
   }
+
+  // TODO remove need to pass "plain" to Call/calls
+  // TODO plain.callsToRounds(...) instead of plain.calls(..., toRounds)?
