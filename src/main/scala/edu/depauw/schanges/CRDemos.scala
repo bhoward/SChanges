@@ -97,13 +97,13 @@ object CRDemos:
     /* From https://complib.org/composition/40519
     5040 Plain Bob Major
     Composed by Cornelius Charge
-    23456	W	M	H
-    34256			2
-    46235	s	–	2
-    34265	–		3
-    63245	–		3
-    43265	s		3
-    23645	2		–
+    23456   W   M   H
+    34256           2
+    46235   s   –   2
+    34265   –       3
+    63245   –       3
+    43265   s       3
+    23645   2       –
     3 part.
      */
     val plain = Method(Stage.Major, "x1x1x1x1,2")
@@ -129,13 +129,13 @@ object CRDemos:
     /* From https://complib.org/composition/40519
     5040 Plain Bob Major
     Composed by Cornelius Charge
-    23456	W	M	H
-    34256			2
-    46235	s	–	2
-    34265	–		3
-    63245	–		3
-    43265	s		3
-    23645	2		–
+    23456   W   M   H
+    34256           2
+    46235   s   –   2
+    34265   –       3
+    63245   –       3
+    43265   s       3
+    23645   2       –
     3 part.
      */
     val plain = Method(Stage.Major, "x1x1x1x1,2")
@@ -414,6 +414,113 @@ object CRDemos:
     println(course.isTrue)
     println(course.isCourse)
     println(course.size)
+
+    Play(blockToMidi(course))
+  }
+
+  @main def nineTailorsNewYearsPeal(): Unit = {
+    /* From https://complib.org/composition/64478
+    See also https://cccbr.org.uk/peal-performance/?id=117
+    15840 Kent Treble Bob Major
+    Composed by Thomas Day
+    2345678     M   I   B   F   V   W   H
+    23564               –               –
+    5273468             –   –           
+    7263458     –       –       –       –
+    76324                           –   2
+    7562438         –               –   –
+    (2354768)               2           
+    3624578             –       –       
+    64352               –               
+    46532           –           –   –   2
+    6752438     –   –           2       
+    76425               –           –   2
+    5437268                 –           
+    3467258     –       –       –       –
+    4275368         –   –           –   –
+    2563478         –   –               –
+    63542               2           –   
+    4235678             2               
+    3 part.
+     */
+    val plain = Method(Stage.Major, "34x34.18x12x18x12x18x12x18,18")
+    val bob = Method(Stage.Major, "14")
+
+    val obs = 8
+    val middle = 6
+    val in = 3
+    val before = 1
+    val fourth = 4
+    val fifth = 5
+    val wrong = 7
+    val home = 8
+
+    val M = Call(bob, obs, middle)
+    val I = Call(bob, obs, in)
+    val B = Call(bob, obs, before)
+    val F = Call(bob, obs, fourth)
+    val V = Call(bob, obs, fifth)
+    val W = Call(bob, obs, wrong)
+    val H = Call(bob, obs, home)
+
+    val course = plain.callsToRounds(
+        B, H,
+        B, F,
+        M, B, V, H,
+        W, H, H,
+        I, W, H,
+        F, F,
+        B, V,
+        B,
+        I, V, W, H, H,
+        M, I, V, V,
+        B, W, H, H,
+        F,
+        M, B, V, H,
+        I, B, W, H,
+        I, B, H,
+        B, B, W,
+        B, B,
+
+        B, H,
+        B, F,
+        M, B, V, H,
+        W, H, H,
+        I, W, H,
+        F, F,
+        B, V,
+        B,
+        I, V, W, H, H,
+        M, I, V, V,
+        B, W, H, H,
+        F,
+        M, B, V, H,
+        I, B, W, H,
+        I, B, H,
+        B, B, W,
+        B, B,
+
+        B, H,
+        B, F,
+        M, B, V, H,
+        W, H, H,
+        I, W, H,
+        F, F,
+        B, V,
+        B,
+        I, V, W, H, H,
+        M, I, V, V,
+        B, W, H, H,
+        F,
+        M, B, V, H,
+        I, B, W, H,
+        I, B, H,
+        B, B, W,
+        B, B
+    )
+
+    println(course.size)
+    println(course.isTrue)
 
     Play(blockToMidi(course))
   }
