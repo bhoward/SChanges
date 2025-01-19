@@ -147,32 +147,32 @@ object CRDemos:
     val wrong = 7
     val home = 8
 
-    val bobWrong = Call(bob, obs, wrong)
-    val bobMiddle = Call(bob, obs, middle)
-    val bobHome = Call(bob, obs, home)
-    val singleWrong = Call(single, obs, wrong)
+    val W = Call(bob, obs, wrong)
+    val M = Call(bob, obs, middle)
+    val H = Call(bob, obs, home)
+    val sW = Call(single, obs, wrong)
 
     val course = plain.callsToRounds(
-      bobHome, bobHome,
-      singleWrong, bobMiddle, bobHome, bobHome,
-      bobWrong, bobHome, bobHome, bobHome,
-      bobWrong, bobHome, bobHome, bobHome,
-      singleWrong, bobHome, bobHome, bobHome,
-      bobWrong, bobWrong, bobHome,
+      H, H,
+      sW, M, H, H,
+      W, H, H, H,
+      W, H, H, H,
+      sW, H, H, H,
+      W, W, H,
 
-      bobHome, bobHome,
-      singleWrong, bobMiddle, bobHome, bobHome,
-      bobWrong, bobHome, bobHome, bobHome,
-      bobWrong, bobHome, bobHome, bobHome,
-      singleWrong, bobHome, bobHome, bobHome,
-      bobWrong, bobWrong, bobHome,
+      H, H,
+      sW, M, H, H,
+      W, H, H, H,
+      W, H, H, H,
+      sW, H, H, H,
+      W, W, H,
 
-      bobHome, bobHome,
-      singleWrong, bobMiddle, bobHome, bobHome,
-      bobWrong, bobHome, bobHome, bobHome,
-      bobWrong, bobHome, bobHome, bobHome,
-      singleWrong, bobHome, bobHome, bobHome,
-      bobWrong, bobWrong, bobHome
+      H, H,
+      sW, M, H, H,
+      W, H, H, H,
+      W, H, H, H,
+      sW, H, H, H,
+      W, W, H
     )
 
     println(course.isTrue)
@@ -397,11 +397,13 @@ object CRDemos:
       M, M, W, H, H,
       M, M, B, W, H, H,
       B, W, W,
+
       M, M, B, W, W, H,
       W, W, H, H,
       M, M, W, H, H,
       M, M, B, W, H, H,
       B, W, W,
+
       M, M, B, W, W, H,
       W, W, H, H,
       M, M, W, H, H,
