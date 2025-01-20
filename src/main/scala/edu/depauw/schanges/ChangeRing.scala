@@ -171,15 +171,6 @@ trait Composition:
     result.alter(alteration)
   }
 
-  def calls(calls: Call*): Block = Block(rounds, Seq()).calls(this, calls*)
-
-  def callsToRounds(calls: Call*): Block = {
-    var result = this.calls(calls*)
-    while result.last != rounds do
-      result = apply(result)
-    result
-  }
-
   def fromRounds: Block = apply(rounds)
 
   def withCalls(calls: Call*): Composition = CallsComposition(this, calls)

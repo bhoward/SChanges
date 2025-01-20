@@ -152,62 +152,6 @@ object CRDemos:
     val H = Call(bob, obs, home)
     val sW = Call(single, obs, wrong)
 
-    val course = plain.callsToRounds(
-      H, H,
-      sW, M, H, H,
-      W, H, H, H,
-      W, H, H, H,
-      sW, H, H, H,
-      W, W, H,
-
-      H, H,
-      sW, M, H, H,
-      W, H, H, H,
-      W, H, H, H,
-      sW, H, H, H,
-      W, W, H,
-
-      H, H,
-      sW, M, H, H,
-      W, H, H, H,
-      W, H, H, H,
-      sW, H, H, H,
-      W, W, H
-    )
-
-    println(course.isTrue)
-    println(course.size)
-
-    Play(blockToMidi(course))
-  }
-
-  @main def sampleComposition3(): Unit = {
-    /* From https://complib.org/composition/40519
-    5040 Plain Bob Major
-    Composed by Cornelius Charge
-    23456   W   M   H
-    34256           2
-    46235   s   –   2
-    34265   –       3
-    63245   –       3
-    43265   s       3
-    23645   2       –
-    3 part.
-     */
-    val plain = Method(Stage.Major, "x1x1x1x1,2")
-    val bob = Method(Stage.Major, "4")
-    val single = Method(Stage.Major, "234")
-
-    val obs = 8
-    val middle = 6
-    val wrong = 7
-    val home = 8
-
-    val W = Call(bob, obs, wrong)
-    val M = Call(bob, obs, middle)
-    val H = Call(bob, obs, home)
-    val sW = Call(single, obs, wrong)
-
     val part = plain.withCalls(
       H, H,
       sW, M, H, H,
