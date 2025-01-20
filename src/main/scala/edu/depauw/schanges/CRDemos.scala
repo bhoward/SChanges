@@ -181,6 +181,51 @@ object CRDemos:
     Play(blockToMidi(course))
   }
 
+  @main def sampleComposition3(): Unit = {
+    /* From https://complib.org/composition/40519
+    5040 Plain Bob Major
+    Composed by Cornelius Charge
+    23456   W   M   H
+    34256           2
+    46235   s   –   2
+    34265   –       3
+    63245   –       3
+    43265   s       3
+    23645   2       –
+    3 part.
+     */
+    val plain = Method(Stage.Major, "x1x1x1x1,2")
+    val bob = Method(Stage.Major, "4")
+    val single = Method(Stage.Major, "234")
+
+    val obs = 8
+    val middle = 6
+    val wrong = 7
+    val home = 8
+
+    val W = Call(bob, obs, wrong)
+    val M = Call(bob, obs, middle)
+    val H = Call(bob, obs, home)
+    val sW = Call(single, obs, wrong)
+
+    val part = plain.withCalls(
+      H, H,
+      sW, M, H, H,
+      W, H, H, H,
+      W, H, H, H,
+      sW, H, H, H,
+      W, W, H
+    )
+
+    val full = part * 3
+    val course = full.fromRounds
+
+    println(course.isTrue)
+    println(course.size)
+
+    Play(blockToMidi(course))
+  }
+
   @main def nineTailorsPart1(): Unit = {
     /*
     A SHORT TOUCH OF KENT TREBLE BOB MAJOR
@@ -212,10 +257,12 @@ object CRDemos:
     val W = Call(bob, obs, wrong)
     val H = Call(bob, obs, home)
 
-    val course = plain.callsToRounds(
-      M, M, B, W, H,
+    val part = plain.withCalls(
       M, M, B, W, H
     )
+
+    val full = part * 2
+    val course = full.fromRounds
 
     println(course.isTrue)
     println(course.isCourse)
@@ -267,18 +314,21 @@ object CRDemos:
     val R = Call(bob, obs, right)
     val sI = Call(single, obs, in)
 
-    val course = plain.callsToRounds(
-      O, M, I, V, R, M, W, R, M, I,
-      O, M, I, V, R, M, W, R, M, I,
-      O, M, I, V, R, M, W, R, M, I,
-      O, M, I, V, R, M, W, R, M, I,
-      O, M, I, V, R, M, W, R, M, sI,
-      O, W, R, M, W, R, I, V, W, I,
-      O, W, R, M, W, R, I, V, W, I,
-      O, W, R, M, W, R, I, V, W, I,
-      O, W, R, M, W, R, I, V, W, I,
+    val part1 = plain.withCalls(
+      O, M, I, V, R, M, W, R, M, I
+    )
+    val part1s = plain.withCalls(
+      O, M, I, V, R, M, W, R, M, sI
+    )
+    val part2 = plain.withCalls(
+      O, W, R, M, W, R, I, V, W, I
+    )
+    val part2s = plain.withCalls(
       O, W, R, M, W, R, I, V, W, sI
     )
+
+    val full = part1 * 4 + part1s + part2 * 4 + part2s
+    val course = full.fromRounds
 
     println(course.isTrue)
     println(course.isCourse)
@@ -321,23 +371,12 @@ object CRDemos:
     val bobSecond = Call(evenBob, obs, second)
     val bobOutS = Call(evenBob, obs, outS)
 
-    val course = plain.callsToRounds(
-      bobLast, bobOutQ, bobInS, bobSecond, bobOutS,
-      bobLast, bobOutQ, bobInS, bobSecond, bobOutS,
-      bobLast, bobOutQ, bobInS, bobSecond, bobOutS,
-      bobLast, bobOutQ, bobInS, bobSecond, bobOutS,
+    val part = plain.withCalls(
       bobLast, bobOutQ, bobInS, bobSecond, bobOutS
     )
 
-    // val bob = Method("3.1.5.3.1.3.1.3.7.1.3.1")
-    // val bob2 = Method("3.1.7.3.1.3.1.3.5.1.3.1")
-    //
-    // val course = ((plain * 4 + bob
-    //   + plain * 2 + bob
-    //   + plain + bob
-    //   + bob2
-    //   + bob2
-    //   + plain * 2) * 5)()
+    val full = part * 5 + plain.toRounds
+    val course = full.fromRounds
 
     println(course.isTrue)
     println(course.isCourse)
@@ -391,25 +430,16 @@ object CRDemos:
     val W = Call(bob, obs, wrong)
     val H = Call(bob, obs, home)
 
-    val course = plain.callsToRounds(
-      M, M, B, W, W, H,
-      W, W, H, H,
-      M, M, W, H, H,
-      M, M, B, W, H, H,
-      B, W, W,
-
-      M, M, B, W, W, H,
-      W, W, H, H,
-      M, M, W, H, H,
-      M, M, B, W, H, H,
-      B, W, W,
-
+    val part = plain.withCalls(
       M, M, B, W, W, H,
       W, W, H, H,
       M, M, W, H, H,
       M, M, B, W, H, H,
       B, W, W
     )
+
+    val full = part * 3 + plain.toRounds
+    val course = full.fromRounds
 
     println(course.isTrue)
     println(course.isCourse)
@@ -463,43 +493,7 @@ object CRDemos:
     val W = Call(bob, obs, wrong)
     val H = Call(bob, obs, home)
 
-    val course = plain.callsToRounds(
-        B, H,
-        B, F,
-        M, B, V, H,
-        W, H, H,
-        I, W, H,
-        F, F,
-        B, V,
-        B,
-        I, V, W, H, H,
-        M, I, V, V,
-        B, W, H, H,
-        F,
-        M, B, V, H,
-        I, B, W, H,
-        I, B, H,
-        B, B, W,
-        B, B,
-
-        B, H,
-        B, F,
-        M, B, V, H,
-        W, H, H,
-        I, W, H,
-        F, F,
-        B, V,
-        B,
-        I, V, W, H, H,
-        M, I, V, V,
-        B, W, H, H,
-        F,
-        M, B, V, H,
-        I, B, W, H,
-        I, B, H,
-        B, B, W,
-        B, B,
-
+    val part = plain.withCalls(
         B, H,
         B, F,
         M, B, V, H,
@@ -518,6 +512,9 @@ object CRDemos:
         B, B, W,
         B, B
     )
+
+    val full = part * 3 + plain.toRounds
+    val course = full.fromRounds
 
     println(course.size)
     println(course.isTrue)

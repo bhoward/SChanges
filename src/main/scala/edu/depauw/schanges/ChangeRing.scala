@@ -129,7 +129,7 @@ case class Block(first: Row, rows: Seq[Row]):
 
   def observe(bell: Int): Int = rows(rows.size - 3).indexOf(bell - 1) + 1
 
-  def alter(alteration: Composition): Block = {
+  def alter(alteration: Method): Block = {
     alteration(Block(first, rows.dropRight(alteration.size)))
   }
 
@@ -162,7 +162,7 @@ trait Composition:
     result
   }
 
-  def call(block: Block, alteration: Composition, observed: Int, position: Int, count: Int): Block = {
+  def call(block: Block, alteration: Method, observed: Int, position: Int, count: Int): Block = {
     var result = apply(block)
     var n = 1
     while result.observe(observed) != position || n != count do
@@ -180,6 +180,14 @@ trait Composition:
     result
   }
 
+  def fromRounds: Block = apply(rounds)
+
+  def withCalls(calls: Call*): Composition = CallsComposition(this, calls)
+
+  def toRow(row: Row): Composition = ToRowComposition(this, row)
+
+  def toRounds: Composition = toRow(rounds)
+
   def andThen(that: Composition): Composition = SeqComposition(this, that)
 
   def repeat(times: Int): Composition = SeqComposition(Seq.fill(times)(this)*)
@@ -187,8 +195,6 @@ trait Composition:
   def +(that: Composition): Composition = this.andThen(that)
 
   def *(times: Int): Composition = this.repeat(times)
-
-  def size: Int
 
 case class SeqComposition(parts: Composition*) extends Composition:
   def stage: Stage = parts(0).stage
@@ -198,7 +204,20 @@ case class SeqComposition(parts: Composition*) extends Composition:
       c(b)
     }
 
-  def size: Int = parts.map(_.size).sum
+case class CallsComposition(plain: Composition, calls: Seq[Call]) extends Composition:
+  def stage: Stage = plain.stage
+
+  def apply(row: Row): Block = Block(row, Seq()).calls(plain, calls*)
+
+case class ToRowComposition(plain: Composition, target: Row) extends Composition:
+  def stage: Stage = plain.stage
+
+  def apply(row: Row): Block = {
+    var result = Block(row, Seq())
+    while result.last != target do
+      result = plain(result)
+    result
+  }
 
 // TODO ParComposition? Add covers?
 
@@ -241,4 +260,4 @@ object Method:
     Method(stage, (if places.isEmpty then changes else changes :+ Change(places*))*)
   }
 
-case class Call(alteration: Composition, observed: Int, position: Int, count: Int = 1)
+case class Call(alteration: Method, observed: Int, position: Int, count: Int = 1)
