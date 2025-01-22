@@ -9,10 +9,9 @@ object CRDemos:
     else
       block
 
-    val event = fullBlock.toEvent(stage.pitches, Rest.q)
-    val song = Song("",
-      Section(60 / secondsPerRow * stage.size,
-      MIDIInstrument.ChurchBell(Rest.q - event)))
+    val event = Rest.q | fullBlock.toEvent(stage.pitches, Rest.q)
+    val bpm = stage.size * 60 / secondsPerRow
+    val song = Song("", Section(bpm, MIDIInstrument.ChurchBell(event)))
     Render(song)
   }
 
