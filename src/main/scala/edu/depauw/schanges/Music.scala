@@ -146,7 +146,7 @@ object Rest:
   import MIDINote.*
   import MIDIInstrument.*
 
-  val song = Song("Example")
+  val demo1 = Song("Example")
     > Section(60)
     + Piano {
       Rest.q - C(4) * 3 |
@@ -165,8 +165,36 @@ object Rest:
     > Section(60)
     + Harpsichord { C(3) * 4 }
 
-  val sequence = Render(song)
-  Play(sequence)
+  val sequence1 = Render(demo1)
+  // Play(sequence1)
+
+  type E = Event[MIDIMelodic, MIDIVolume]
+  type N = Note[MIDIMelodic, MIDIVolume]
+  def measure(a: N, b: N, c: N, d: N, e: N): E = {
+    val half = a.h / (Rest.s - b.q.dotdot) / (Rest.e - c.s - d.s - e.s - c.s - d.s - e.s)
+    half - half
+  }
+
+  val demo2 = Song("Prelude")
+    > Section(112)
+    + Piano {
+      measure(C(4).p, E(4).p, G(4).p, C(5).p, E(5).p) |
+      measure(C(4).p, D(4).p, A(4).p, D(5).p, F(5).p) |
+      measure(B(3).mp, D(4).mp, G(4).mp, D(5).mp, F(5).mp) |
+      measure(C(4).mf, E(4).mf, G(4).mf, C(5).mf, E(5).mf) |
+      measure(C(4).f, E(4).f, A(4).f, E(5).f, A(5).f) |
+      measure(C(4).p, D(4).p, F(4).sharp.p, A(4).p, D(5).p) |
+      measure(B(3).f, D(4).f, G(4).f, D(5).f, G(5).f) |
+      measure(B(3).p, C(4).p, E(4).p, G(4).p, C(5).p) |
+      measure(A(3).pp, C(4).pp, E(4).pp, G(4).pp, C(5).pp) |
+      measure(D(3).pp, A(3).pp, D(4).pp.pp, F(4).sharp.pp, C(5).pp) |
+      measure(G(3).p, B(3).p, D(4).p, G(4).p, B(4).p) |
+      measure(G(3).mp, B(3).flat.mp, E(4).mp, G(4).mp, B(4).flat.mp)
+    }
+  // TODO make it easier to apply dynamics to an event...
+
+  val sequence2 = Render(demo2)
+  Play(sequence2)
 }
 
 /* TODO
